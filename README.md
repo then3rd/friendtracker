@@ -3,7 +3,7 @@ Copy example to example.ini and edit the config file to include your fb username
 cp config{_example,}.ini
 ```
 
-Run it:
+Basice environment config:
 ```
 python3 -m venv venv
 venv/bin/pip install -r requirements.txt
