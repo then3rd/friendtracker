@@ -1,0 +1,6 @@
+venv/
+.DS_Store
+fb_online_count.csv
+fb_online_users.csv
+screenshot1.png
+config.ini
