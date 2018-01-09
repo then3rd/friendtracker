@@ -1,9 +1,10 @@
 #!venv/bin/python
 
 import csv
-#import getpass
 import os
 import time
+import argparse
+import getpass
 from configparser import ConfigParser
 from random import randint
 from datetime import datetime
@@ -20,13 +21,58 @@ def main():
     '''Configure Tracker'''
     parser = ConfigParser()
     parser.read('config.ini')
-    fb_username = str(parser.get('fb', 'username'))
-    fb_profilename = str(parser.get('fb', 'profilename'))
-    fb_password = str(parser.get('fb', 'password'))
-    #fb_password = getpass.getpass('fb password: ')
-    headless = str(parser.get('fb', 'headless'))
-    interval_time = int(parser.get('fb', 'interval_time')) * 60
-    total_time = int(parser.get('fb', 'total_time')) * 3600
+    args = argparse.ArgumentParser(description='FB friend online status data agregation utility')
+    args.add_argument(
+        '--password', '-p',
+        dest='password',
+        action='store_true',
+        default=False,
+        help='Prompt for interactive password, ignoring INI'
+        )
+    args.add_argument(
+        '--username', '-u',
+        type=str,
+        nargs='?',
+        dest='username',
+        action='store',
+        help='Specify username, ignoring INI'
+        )
+    args.add_argument(
+        '--profile', '-r',
+        type=str,
+        nargs='?',
+        dest='profile',
+        action='store',
+        help='Specify account name, ignoring INI'
+        )
+    args.add_argument(
+        '--interval', '-v',
+        type=int,
+        dest='interval',
+        action='store',
+        help='Set interval time (minutes), ignoring INI'
+        )
+    args.add_argument(
+        '--total', '-t',
+        type=int,
+        dest='total',
+        action='store',
+        help='Prompt for total time (hours), ignoring INI'
+        )
+    args.add_argument(
+        '--interactive', '-i',
+        dest='headless',
+        action='store_false',
+        default=bool(parser.get('fb', 'headless')),
+        help='Run interactively instead of headless, ignoring INI'
+        )
+
+    argvars = args.parse_args()
+    fb_username = str(parser.get('fb', 'username')) if argvars.username is None else argvars.username
+    fb_profilename = str(parser.get('fb', 'profilename')) if argvars.profile is None else argvars.profile
+    fb_password = str(parser.get('fb', 'password') if argvars.password is False else str(getpass.getpass('password: ')))
+    interval_time = (int(parser.get('fb', 'interval_time')) * 60) if argvars.interval is None else argvars.interval * 60
+    total_time = (int(parser.get('fb', 'total_time')) * 3600) if argvars.total is None else argvars.total * 3600
     number_of_iterations = total_time / interval_time
     print(number_of_iterations, "interations within", total_time/3600, "hrs total time @", interval_time/60, "min interval")
 
@@ -51,7 +97,7 @@ def main():
             print('CSV created: ' + csv_file2)
 
     options = Options()
-    if headless:
+    if argvars.headless:
         options.add_argument("--headless")
         options.add_argument("--window-size=1400,10000")
         driver = webdriver.Chrome(chrome_options=options)
@@ -108,7 +154,7 @@ def main():
             with open(csv_file2, 'a') as fil:
                 writer = csv.writer(fil, delimiter=',')
                 writer.writerow([last_pk, datenow, hournow, minutenow, utext])
-        if headless:
+        if argvars.headless:
             screenshot = "screenshot1.png"
             driver.save_screenshot(screenshot)
             print('Screenshot saved:', screenshot)
